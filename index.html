@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>丹麥公民考試 互動測驗 · Indfødsretsprøven</title>
+<style>
+  :root{
+    --red:#C8102E; --red-dark:#9c0c24; --ink:#1d1d22; --paper:#f6f4ef;
+    --card:#ffffff; --line:#e3ddd2; --ok:#1f8a4c; --bad:#c0392b; --muted:#6b6b73;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:"Segoe UI","Microsoft JhengHei",system-ui,sans-serif;
+    background:var(--paper); color:var(--ink); line-height:1.6;
+    min-height:100vh; padding:16px;
+  }
+  .wrap{max-width:720px;margin:0 auto}
+  header{text-align:center;padding:18px 0 8px}
+  header h1{font-size:1.45rem;color:var(--red)}
+  header .sub{color:var(--muted);font-size:.9rem;margin-top:2px}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:20px;margin-top:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)
+  }
+  h2{font-size:1.1rem;margin-bottom:12px}
+  .modes{display:grid;gap:10px}
+  .mode-btn{
+    display:flex;align-items:center;gap:12px;text-align:left;width:100%;
+    background:var(--card);border:1px solid var(--line);border-radius:10px;
+    padding:14px 16px;cursor:pointer;font-size:1rem;transition:.15s
+  }
+  .mode-btn:hover{border-color:var(--red);transform:translateY(-1px)}
+  .mode-btn .ico{font-size:1.6rem;width:34px;text-align:center}
+  .mode-btn .t{font-weight:700}
+  .mode-btn .d{font-size:.82rem;color:var(--muted);font-weight:400}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .chip{
+    border:1px solid var(--line);background:#fff;border-radius:20px;
+    padding:7px 14px;cursor:pointer;font-size:.9rem
+  }
+  .chip:hover{border-color:var(--red)}
+  .topbar{display:flex;justify-content:space-between;align-items:center;font-size:.85rem;color:var(--muted);margin-bottom:6px}
+  .timer{font-weight:700}
+  .timer.warn{color:var(--bad)}
+  .progress{height:7px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:14px}
+  .progress > i{display:block;height:100%;background:var(--red);width:0;transition:.3s}
+  .qcat{display:inline-block;font-size:.74rem;background:#f0ebe0;color:var(--muted);padding:2px 9px;border-radius:10px;margin-bottom:8px}
+  .qtext{font-size:1.08rem;font-weight:600;margin-bottom:14px}
+  .qtext .num{color:var(--red);margin-right:6px}
+  .opts{display:grid;gap:9px}
+  .opt{
+    display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;
+    background:#fff;border:1.5px solid var(--line);border-radius:9px;
+    padding:11px 13px;cursor:pointer;font-size:.97rem;transition:.12s
+  }
+  .opt:hover:not(:disabled){border-color:var(--red)}
+  .opt:disabled{cursor:default}
+  .opt .key{
+    font-weight:700;background:#f0ebe0;border-radius:6px;
+    min-width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:.85rem
+  }
+  .opt.correct{border-color:var(--ok);background:#eafaf0}
+  .opt.correct .key{background:var(--ok);color:#fff}
+  .opt.wrong{border-color:var(--bad);background:#fdecea}
+  .opt.wrong .key{background:var(--bad);color:#fff}
+  .explain{margin-top:14px;padding:13px;border-radius:9px;font-size:.92rem;display:none}
+  .explain.show{display:block}
+  .explain.right{background:#eafaf0;border:1px solid #bce6cc}
+  .explain.wrong{background:#fdecea;border:1px solid #f3c3bd}
+  .explain b{display:block;margin-bottom:3px}
+  .explain .ch{color:var(--muted);font-size:.83rem;margin-top:5px}
+  .btn{
+    background:var(--red);color:#fff;border:0;border-radius:9px;
+    padding:12px 22px;font-size:1rem;cursor:pointer;font-weight:700;transition:.15s
+  }
+  .btn:hover{background:var(--red-dark)}
+  .btn.ghost{background:#fff;color:var(--red);border:1.5px solid var(--red)}
+  .btn.ghost:hover{background:#fff5f6}
+  .row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .row .btn{flex:1;min-width:120px}
+  .hide{display:none}
+  .score-big{font-size:3rem;font-weight:800;text-align:center;color:var(--red)}
+  .verdict{text-align:center;font-size:1.15rem;font-weight:700;margin:6px 0 4px}
+  .verdict.pass{color:var(--ok)}
+  .verdict.fail{color:var(--bad)}
+  .stat{display:flex;justify-content:space-around;text-align:center;margin:14px 0}
+  .stat div span{display:block;font-size:1.5rem;font-weight:700}
+  .stat div small{color:var(--muted)}
+  .review-item{border-top:1px solid var(--line);padding:11px 0;font-size:.9rem}
+  .review-item .q{font-weight:600}
+  .review-item .a{color:var(--ok)}
+  footer{text-align:center;color:var(--muted);font-size:.78rem;padding:22px 0 8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🇩🇰 丹麥公民考試 互動測驗</h1>
+    <div class="sub">Indfødsretsprøven · 60 題題庫 · 練習 / 模擬考 / 章節 / 錯題</div>
+  </header>
+
+  <!-- ===== HOME ===== -->
+  <div id="home">
+    <div class="card">
+      <h2>選擇模式</h2>
+      <div class="modes">
+        <button class="mode-btn" onclick="startPractice()">
+          <span class="ico">📖</span>
+          <span><span class="t">練習模式</span><br><span class="d">全部 60 題依序作答，每題立刻看對錯與解析</span></span>
+        </button>
+        <button class="mode-btn" onclick="startExam()">
+          <span class="ico">⏱️</span>
+          <span><span class="t">模擬考模式</span><br><span class="d">隨機 45 題、限時 45 分鐘，最後算分（36 分及格）</span></span>
+        </button>
+        <button class="mode-btn" onclick="showChapters()">
+          <span class="ico">📚</span>
+          <span><span class="t">章節分類練習</span><br><span class="d">選歷史 / 政治制度 / 經濟與福利 / 文化與社會</span></span>
+        </button>
+        <button class="mode-btn" onclick="startWrong()">
+          <span class="ico">🔁</span>
+          <span><span class="t">錯題複習</span><br><span class="d">自動收集你答錯的題目，集中重練（<span id="wrongCount">0</span> 題）</span></span>
+        </button>
+      </div>
+      <div id="chapterPick" class="hide">
+        <h2 style="margin-top:18px">選擇章節</h2>
+        <div class="chips" id="chapterChips"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== QUIZ ===== -->
+  <div id="quiz" class="hide">
+    <div class="card">
+      <div class="topbar">
+        <span id="quizMode"></span>
+        <span class="timer" id="timer"></span>
+      </div>
+      <div class="progress"><i id="bar"></i></div>
+      <div class="qcat" id="qcat"></div>
+      <div class="qtext" id="qtext"></div>
+      <div class="opts" id="opts"></div>
+      <div class="explain" id="explain"></div>
+      <div class="row">
+        <button class="btn ghost" onclick="quitQuiz()">結束</button>
+        <button class="btn hide" id="nextBtn" onclick="nextQ()">下一題 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== RESULT ===== -->
+  <div id="result" class="hide">
+    <div class="card">
+      <h2 id="resTitle">測驗結果</h2>
+      <div class="score-big" id="resScore"></div>
+      <div class="verdict" id="resVerdict"></div>
+      <div class="stat" id="resStat"></div>
+      <div id="resReview"></div>
+      <div class="row">
+        <button class="btn ghost" onclick="goHome()">回首頁</button>
+        <button class="btn" id="resRetry">再考一次</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    題庫整理自 NotebookLM「DK 丹麥公民社會」· 僅供個人備考練習<br>
+    答對答錯紀錄存在本機瀏覽器（localStorage），不會上傳
+  </footer>
+</div>
+
+<script>
+/* ============ 題庫（60 題） ============ */
+const QUESTIONS = [
+ {id:'R1-1',cat:'歷史',q:'Hvem fik skrevet på den ene af Jellingstenene, at han gjorde danerne kristne?',opts:['Gorm den Gamle','Harald Blåtand','Svend Tveskæg','Knud den Store'],ans:1,exp:'哈拉爾藍牙王約 965 年立耶林石，宣告丹麥人皈依基督教，被稱為「丹麥的受洗證明」。',ch:'Kap. 1.2 Vikingetid'},
+ {id:'R1-2',cat:'歷史',q:'Hvad indebar reformationen i Danmark i 1536?',opts:['Indførelse af grundloven','Overgangen fra protestantisk til katolsk kristendom','Overgangen fra katolsk til protestantisk kristendom','Afskaffelse af slaveri'],ans:2,exp:'1536 年宗教改革讓丹麥從天主教改宗為新教路德宗，國王取代教宗成為教會領袖。',ch:'Kap. 1.4 Reformationen'},
+ {id:'R1-3',cat:'歷史',q:'Hvem fik mere magt med enevælden, der blev indført i Danmark 1660-61?',opts:['Adelen','Kirken','Kongen','Bønderne'],ans:2,exp:'絕對君主制廢除貴族特權，將統治權集中於國王（弗雷德里克三世）一人。',ch:'Kap. 1.4 Enevælden'},
+ {id:'R1-4',cat:'歷史',q:'Hvornår trådte Danmarks Riges Grundlov (den første demokratiske grundlov) i kraft?',opts:['5. juni 1849','5. juni 1864','5. maj 1945','5. juni 1915'],ans:0,exp:'1849/6/5 簽署的憲法終結絕對君主制，開啟三權分立與民主。',ch:'Kap. 1.6'},
+ {id:'R1-5',cat:'歷史',q:'Hvad blev resultatet af Den 2. Slesvigske Krig i 1864?',opts:['Danmark erobrede Skåne','Danmark tabte Slesvig og Holsten','Danmark blev besat af Tyskland','Danmark vandt over Preussen'],ans:1,exp:'丹麥慘敗給普魯士與奧地利，失去 Slesvig 與 Holsten，約 1/3 國土。',ch:'Kap. 1.7'},
+ {id:'R1-6',cat:'歷史',q:'Ved hvilken grundlovsændring fik kvinder valgret til Folketinget?',opts:['1849','1866','1915','1953'],ans:2,exp:'1915 年修憲擴張選舉權，婦女與無自有家戶的傭人首度獲得國會投票權。',ch:'Kap. 1.8'},
+ {id:'R1-7',cat:'歷史',q:'Hvor længe varede Danmarks officielle militære modstand, da Tyskland angreb Danmark den 9. april 1940?',opts:['Mindre end en dag','Cirka en uge','Cirka en måned','Cirka et år'],ans:0,exp:'面對德軍，丹麥官方軍事抵抗僅維持幾小時，不到一天。',ch:'Kap. 1.10'},
+ {id:'R1-8',cat:'歷史',q:'Hvilken gruppe borgere blev i tusindtal hjulpet med at flygte fra Danmark til Sverige i oktober 1943?',opts:['Danske kommunister','Danske soldater','Danske jøder','Danske modstandsfolk'],ans:2,exp:'1943/10 丹麥民眾協助數千名猶太人偷渡到中立國瑞典。',ch:'Kap. 1.10'},
+ {id:'R1-9',cat:'歷史',q:'Hvad indebar den seneste ændring af grundloven i 1953 blandt andet?',opts:['At valgretsalderen blev sænket til 18 år','At kvinder fik mulighed for at arve tronen','At Danmark blev medlem af FN','At slaveriet blev afskaffet'],ans:1,exp:'1953 修憲改一院制，並賦予女性王位繼承權（後來的瑪格麗特二世）。',ch:'Kap. 1.11'},
+ {id:'R1-10',cat:'歷史',q:'Hvilket år blev Danmark medlem af Det Europæiske Fællesskab (EF/EU)?',opts:['1945','1949','1973','1992'],ans:2,exp:'1972 公投通過後，丹麥 1973/1/1 加入歐盟前身歐洲共同體 EF。',ch:'Kap. 4.1'},
+ {id:'R1-11',cat:'政治',q:'Hvem er den lovgivende, den udøvende og den dømmende magt fordelt mellem ifølge grundloven?',opts:['Folketinget og regeringen, regeringen, og domstolene','Folketinget, kommunerne, og domstolene','Regeringen, regionerne, og kommunerne','Kongen, statsministeren, og politiet'],ans:0,exp:'三權分立：立法權由議會與政府共享，行政權屬政府，司法權獨立屬法院。',ch:'Kap. 2.2'},
+ {id:'R1-12',cat:'政治',q:'Hvor mange procent af stemmerne ved et folketingsvalg skal et parti normalt have for at komme i Folketinget?',opts:['Mindst 1 %','Mindst 2 %','Mindst 4 %','Mindst 5 %'],ans:1,exp:'政黨得票門檻 (spærregrænse) 為 2%，相當低，造就多黨林立。',ch:'Kap. 2.3'},
+ {id:'R1-13',cat:'政治',q:'Kan en regering bestå af et eller flere partier, der ikke tilsammen har flertal i Folketinget?',opts:['Ja','Nej','Kun i krigstid','Kun hvis kongen tillader det'],ans:0,exp:'丹麥常見少數政府，只要國會多數不反對即可運作。',ch:'Kap. 2.3'},
+ {id:'R1-14',cat:'政治',q:'Hvad har regionerne ansvaret for driften af?',opts:['Politi','Folkeskoler','Sygehuse','Børnehaver'],ans:2,exp:'五個大區最核心職責是公立醫院與醫療保健系統。',ch:'Kap. 2.5'},
+ {id:'R1-15',cat:'政治',q:'Hvilket af følgende områder har kommunerne ansvaret for driften af?',opts:['Domstole','Vuggestuer og børnehaver','Universiteter','Forsvaret'],ans:1,exp:'98 個市鎮負責貼近民眾的服務：托嬰、幼兒園、中小學、長照。',ch:'Kap. 2.5'},
+ {id:'R1-16',cat:'政治',q:'Hvilken instans har som sin primære opgave at kontrollere, om der er sket forsømmelser eller fejl i offentlige myndigheders sagsbehandling?',opts:['Folketingets Ombudsmand','Etisk Råd','Pressenævnet','Højesteret'],ans:0,exp:'議會監察使 (Ombudsmand) 獨立監督公共行政機關。',ch:'Kap. 2.4'},
+ {id:'R1-17',cat:'政治',q:'Hvem beslutter, om der skal udskrives valg til Folketinget inden valgperiodens udløb?',opts:['Folketingets formand','Statsministeren','Kongen','Indenrigsministeren'],ans:1,exp:'首相可隨時提前解散議會、宣布重新大選。',ch:'Kap. 2.3'},
+ {id:'R1-18',cat:'政治',q:'Kan statsministeren udpege en minister, der ikke er medlem af Folketinget?',opts:['Ja','Nej','Kun med Folketingets godkendelse','Kun hvis personen er dansk født'],ans:0,exp:'首相可任命非議員的專業人士擔任部長。',ch:'Kap. 2.3'},
+ {id:'R1-19',cat:'政治',q:'Hvem vedtager et lovforslag i Danmark?',opts:['Regeringen','Domstolene','Folketinget','Vælgerne'],ans:2,exp:'法案需經國會 (Folketinget) 三讀並多數通過才成為法律。',ch:'Kap. 2.3'},
+ {id:'R1-20',cat:'政治',q:'Er det et krav, at man som dansk statsborger skal være medlem af folkekirken?',opts:['Ja','Nej','Ja, for alle over 18 år','Ja, hvis man er født i Danmark'],ans:1,exp:'憲法保障宗教自由，加入國家教會 Folkekirken 完全自願。',ch:'Kap. 6.9'},
+ {id:'R1-21',cat:'經濟',q:'Hvordan finansieres den danske velfærdsmodel primært?',opts:['Gennem brugerbetaling på sygehuse','Via private forsikringer for alle borgere','I fællesskab af hele befolkningen via skatter og afgifter','Alene af virksomhedernes overskud'],ans:2,exp:'北歐福利由全民繳納的稅收與附加費共同支應。',ch:'Kap. 3.1'},
+ {id:'R1-22',cat:'經濟',q:'Hvem er aftaleparter, når der skal indgås overenskomster om fx løn og arbejdsforhold på det private arbejdsmarked?',opts:['Regering og embedsmænd','Stat og kommuner','Fagforeninger og arbejdsgiverorganisationer','Domstole og politi'],ans:2,exp:'「丹麥模式」由工會與雇主協會自行談判薪資與勞動條件。',ch:'Kap. 3.3'},
+ {id:'R1-23',cat:'經濟',q:'Er flertallet af lønmodtagere på det danske arbejdsmarked medlem af en fagforening?',opts:['Ja','Nej','Kun offentligt ansatte','Kun industriarbejdere'],ans:0,exp:'丹麥工會參與率極高，多數受薪者加入工會（含 A-kasse 失業保險）。',ch:'Kap. 3.3'},
+ {id:'R1-24',cat:'經濟',q:'Hvilke myndigheder udskriver skatter i Danmark?',opts:['Staten og regionerne','Staten og kommunerne','Regionerne og kommunerne','Kun staten'],ans:1,exp:'只有國家與市鎮有徵稅權，大區靠撥款運作。',ch:'Kap. 3.2'},
+ {id:'R1-25',cat:'經濟',q:'Hvad var baggrunden for Kanslergadeforliget i 1933, der lagde grunden til den moderne velfærdsstat?',opts:['Integrationsproblemer','Miljøproblemer','Økonomiske problemer','Udenrigspolitiske trusler'],ans:2,exp:'1930 年代大蕭條促成 1933 年坎斯勒街協議，奠定現代福利國家。',ch:'Kap. 1.9'},
+ {id:'R1-26',cat:'文化',q:'Er der i dansk lov en regel om, at en arbejdsgiver skal give kvinder og mænd lige løn for samme arbejde?',opts:['Ja','Nej','Kun for offentligt ansatte','Kun for ledere'],ans:0,exp:'丹麥同工同酬法 (Ligelønsloven) 規定同值工作須同酬。',ch:'Kap. 6.15'},
+ {id:'R1-27',cat:'文化',q:'Hvilket år fik personer af samme køn ret til at indgå et registreret partnerskab i Danmark?',opts:['1955','1972','1989','2012'],ans:2,exp:'丹麥 1989 年成為全球首個允許同性註冊伴侶的國家。',ch:'Kap. 6.13'},
+ {id:'R1-28',cat:'文化',q:'Hvilken af følgende fortællinger er skrevet af H.C. Andersen?',opts:['Hans og Grete','Rødhætte','Den grimme ælling','Pippi Langstrømpe'],ans:2,exp:'《醜小鴨》(Den grimme ælling) 是安徒生最經典的童話之一。',ch:'Kap. 6.5'},
+ {id:'R1-29',cat:'文化',q:"Fra hvilket land kom der flest indvandrere (gæstearbejdere) til Danmark i slutningen af 1960'erne?",opts:['Kina','USA','Tyrkiet','Vietnam'],ans:2,exp:'1960 年代末客工潮，來自土耳其的移工人數最多。',ch:'Kap. 6.1'},
+ {id:'R1-30',cat:'文化',q:'Hvad er den kriminelle lavalder i Danmark?',opts:['12 år','15 år','18 år','21 år'],ans:1,exp:'丹麥刑事責任最低年齡為 15 歲。',ch:'Kap. 6'},
+ {id:'R2-1',cat:'歷史',q:'Hvilken kendt sætning stammer fra indledningen til Jyske Lov fra 1241?',opts:['"Gør din pligt og kræv din ret"','"Med lov skal man land bygge"','"Gud, Konge og Fædreland"','"For fred og frihed"'],ans:1,exp:'「以法立國 (Med lov skal man land bygge)」是 1241《日德蘭法典》開篇名言。',ch:'Kap. 1.3.1'},
+ {id:'R2-2',cat:'歷史',q:'Hvilket år blev Kalmarunionen endeligt opløst, da Sverige rev sig løs for altid?',opts:['1397','1523','1660','1814'],ans:1,exp:'卡爾馬聯盟 1397 成立，瑞典 1523 脫離，聯盟徹底解散。',ch:'Kap. 1.3.2'},
+ {id:'R2-3',cat:'歷史',q:'Hvilken gruppe i samfundet fik forbedret deres vilkår markant med ophævelsen af stavnsbåndet i 1788?',opts:['Bønderne','Adelen','Byens arbejdere','Soldaterne'],ans:0,exp:'1788 年廢除農奴制 (Stavnsbåndet)，農民獲得遷徙自由。',ch:'Kap. 1.6.1'},
+ {id:'R2-4',cat:'歷史',q:'Hvilket land angreb og besejrede den danske flåde i Slaget på Reden i 1801?',opts:['Tyskland','Sverige','Frankrig','Storbritannien'],ans:3,exp:'英國 1801 突襲停泊哥本哈根的丹麥艦隊（哥本哈根海戰）。',ch:'Kap. 1.6.2'},
+ {id:'R2-5',cat:'歷史',q:'Hvilket landområde måtte Danmark afgive til Sverige ved en fredsaftale i 1814?',opts:['Island','Færøerne','Norge','Grønland'],ans:2,exp:'拿破崙戰爭站錯邊，丹麥 1814 被迫將挪威割讓給瑞典。',ch:'Kap. 1.6.2'},
+ {id:'R2-6',cat:'歷史',q:'Hvilke to politiske partier organiserede sig omkring 1870 under "Forfatningskampen"?',opts:['Socialdemokratiet og SF','Højre og Venstre','Det Konservative Folkeparti og Liberal Alliance','Radikale Venstre og Moderaterne'],ans:1,exp:'1870 年代憲政鬥爭：地主貴族的 Højre 與農民的 Venstre 成型。',ch:'Kap. 1.8.3'},
+ {id:'R2-7',cat:'歷史',q:'Hvilken grundlovsændring kaldes et demokratisk tilbageskridt, fordi de rigeste fik særlig magt i Landstinget?',opts:['1866','1915','1953','1992'],ans:0,exp:'1864 戰敗後保守抬頭，1866 修憲讓國王與富人主導上議院，被視為民主倒退。',ch:'Kap. 1.8.3'},
+ {id:'R2-8',cat:'歷史',q:'Hvilken vigtig begivenhed under 2. Verdenskrig fandt sted den 29. august 1943?',opts:['Danmark blev befriet af britiske tropper','Regeringen gik af, og samarbejdspolitikken med Tyskland sluttede','Tyskland angreb Danmark','Danmark blev medlem af FN'],ans:1,exp:'1943/8/29 政府集體辭職，與德國的合作政策正式終結。',ch:'Kap. 1.10.1'},
+ {id:'R2-9',cat:'歷史',q:'Hvilken international forsvarsalliance blev Danmark medlem af i 1949?',opts:['EU (EF)','FN','NATO','WTO'],ans:2,exp:'二戰教訓讓丹麥放棄中立，1949 加入北約 (NATO)。',ch:'Kap. 1.11'},
+ {id:'R2-10',cat:'歷史',q:'Hvorfor kaldes folketingsvalget i 1973 for "Jordskredsvalget"?',opts:['Fordi Socialdemokratiet opnåede absolut flertal','Fordi mange vælgere stemte på nye partier (blandt andet Fremskridtspartiet)','Fordi valgretsalderen blev sænket til 18 år','Fordi der for første gang blev valgt flere kvinder end mænd'],ans:1,exp:'1973「滑坡選舉」選民大量改投新興政黨（如進步黨），國會政黨數翻倍。',ch:'Kap. 1.12.3'},
+ {id:'R2-11',cat:'政治',q:'Hvor mange gange skal et lovforslag behandles i Folketinget, før det kan vedtages som lov?',opts:['1 gang','2 gange','3 gange','4 gange'],ans:2,exp:'法案須在國會經過三讀 (3. behandling) 程序才能表決通過。',ch:'Kap. 2.3'},
+ {id:'R2-12',cat:'政治',q:'Hvilken særlig domstol behandler sager, hvor ministre anklages for lovbrud i deres embede?',opts:['Landsretten','Rigsretten','Den Særlige Klageret','Ombudsmanden'],ans:1,exp:'彈劾法院 Rigsretten 專審部長在職違法（如 2021 Inger Støjberg 案）。',ch:'Kap. 2.4'},
+ {id:'R2-13',cat:'政治',q:'Hvad hedder den øverste domstol i Danmark?',opts:['Byretten','Højesteret','Statsretten','Østre Landsret'],ans:1,exp:'最高法院 Højesteret 是三級法院的最高級。',ch:'Kap. 2.2'},
+ {id:'R2-14',cat:'政治',q:'Hvad betyder "et mistillidsvotum" ifølge det parlamentariske princip?',opts:['At domstolene afviser en lov','At kongen opløser Folketinget','At et flertal i Folketinget udtrykker, at de ikke har tillid til regeringen eller en minister','At befolkningen stemmer nej ved en folkeafstemning'],ans:2,exp:'不信任投票：國會多數對政府或部長失去信任，須辭職或重選。',ch:'Kap. 2.3'},
+ {id:'R2-15',cat:'政治',q:'Hvem bestemmer i praksis, hvem der skal være statsminister efter et valg (kaldet en dronningerunde)?',opts:['Domstolene','Monarken alene','Det parti eller de partier, der kan samle et flertal i Folketinget bag sig','Politiets ledelse'],ans:2,exp:'「女王/國王輪詢」中由能組成國會多數的政黨領袖出任首相。',ch:'Kap. 2.3'},
+ {id:'R2-16',cat:'政治',q:'Har den danske monark (kongen/dronningen) reel politisk magt til at bestemme lovgivningen i dag?',opts:['Ja, monarken kan nedlægge veto mod Folketingets love','Nej, monarkens rolle er i praksis symbolsk og formel','Ja, monarken udnævner dommerne uden om regeringen','Ja, monarken har ansvaret for udenrigspolitikken'],ans:1,exp:'現代君主角色純象徵性，實權由政府與議會接管。',ch:'Kap. 2.2.1'},
+ {id:'R2-17',cat:'政治',q:'Hvem forhandler og indgår traktater (internationale aftaler) med andre lande på Danmarks vegne?',opts:['Folketingets Ombudsmand','Regeringen','Højesteret','Rigsretten'],ans:1,exp:'行政權（政府／外交部）負責代表丹麥談判與締結條約。',ch:'Kap. 2'},
+ {id:'R2-18',cat:'政治',q:'Hvor ofte afholdes der kommunal- og regionsrådsvalg i Danmark?',opts:['Hvert 2. år','Hvert 3. år','Hvert 4. år','Hvert 5. år'],ans:2,exp:'地方選舉（市鎮與大區）固定每 4 年舉行一次。',ch:'Kap. 2'},
+ {id:'R2-19',cat:'政治',q:'Hvad har politikerne i regionsrådene (Regionerne) hovedansvaret for at drive?',opts:['Børnehaver og folkeskoler','Sygehuse og sundhedsvæsenet','Forsvaret og politiet','Udenrigspolitikken'],ans:1,exp:'大區最核心職責是公立醫院與醫療衛生系統。',ch:'Kap. 2.5'},
+ {id:'R2-20',cat:'政治',q:'I hvilket år blev de gamle "amter" nedlagt og erstattet af 5 store "regioner"?',opts:['1973','1992','2007','2015'],ans:2,exp:'2007 年結構改革廢除舊「郡 amter」，改為 5 大區與 98 市鎮。',ch:'Kap. 2.5'},
+ {id:'R2-21',cat:'經濟',q:"Har Danmark indført EU's fælles valuta, euroen?",opts:['Ja, euroen blev indført i 2000','Nej, Danmark bruger stadig danske kroner på grund af et forbehold','Ja, men kun for virksomheder','Nej, Danmark bruger stadig D-mark'],ans:1,exp:'2000 公投否決加入歐元，丹麥保留貨幣豁免權，續用丹麥克朗。',ch:'Kap. 4.1'},
+ {id:'R2-22',cat:'經濟',q:'Hvad er formålet med at være medlem af en A-kasse (arbejdsløshedskasse) i Danmark?',opts:['At forhandle den årlige lønstigning med chefen','At man kan få økonomisk hjælp (dagpenge), hvis man bliver arbejdsløs','At betale for medlemmernes lægebesøg','At fordele overskuddet fra virksomhedens aktier'],ans:1,exp:'A-kasse 是失業保險基金，失業時可領失業救濟金 (dagpenge)。',ch:'Kap. 3.3'},
+ {id:'R2-23',cat:'經濟',q:'Hvad kaldes den danske arbejdsmarkedsmodel, der giver arbejdsgivere nem adgang til at fyre, mens lønmodtagere sikres økonomisk understøttelse?',opts:['Den nordiske pasunion','Flexicurity','Velfærdsmodellen','Andelsbevægelsen'],ans:1,exp:'彈性安全 (Flexicurity)：雇主可彈性解雇，員工有強大失業保障。',ch:'Kap. 3.3'},
+ {id:'R2-24',cat:'經濟',q:"Hvilken type varer udgjorde mere end halvdelen af Danmarks eksport helt frem til slutningen af 1950'erne?",opts:['Olie og gas','IT og elektronik','Landbrugsvarer (fx kød og smør)','Møbler og design'],ans:2,exp:'1950 年代末以前，農產品（豬肉、奶油）是丹麥最大出口。',ch:'Kap. 3.2'},
+ {id:'R2-25',cat:'經濟',q:'Gennem hvilken enhed yder den danske stat primært økonomisk hjælp til udviklingslande (ulandsbistand)?',opts:['Danida','Røde Kors','Amnesty International','Nationalbanken'],ans:0,exp:'Danida（外交部下屬）負責對發展中國家的官方援助。',ch:'外援機制'},
+ {id:'R2-26',cat:'文化',q:'Hvordan fejrer man traditionelt sankthans i Danmark?',opts:['Man klæder sig ud og slår katten af tønden','Man samles om aftenen og tænder bål','Man danser rundt om et pyntet træ','Man spiser gåsesteg og giver gaver'],ans:1,exp:'仲夏節 (Sankthans) 傳統是 6/23 夜晚聚集點燃營火並唱仲夏之歌。',ch:'Kap. 6'},
+ {id:'R2-27',cat:'文化',q:'Hvornår blev Nordslesvig (i dag kaldet Sønderjylland) genforenet med Danmark efter en folkeafstemning?',opts:['1864','1901','1920','1945'],ans:2,exp:'一戰後北石勒蘇益格（今南日德蘭）1920 年公投回歸丹麥 (Genforeningen)。',ch:'Kap. 1.9.3'},
+ {id:'R2-28',cat:'文化',q:'Hvor har den danske politiker Margrethe Vestager haft en fremtrædende toppost i perioden 2014-2024?',opts:['Som generalsekretær for NATO',"Som formand for FN's klimapanel",'I EU som EU-kommissær','Som præsident for Den Europæiske Centralbank'],ans:2,exp:'Margrethe Vestager 2014–24 任歐盟執委（競爭事務）。',ch:'時事／人物'},
+ {id:'R2-29',cat:'文化',q:'Inden for hvilket videnskabeligt område fik danskeren Niels Bohr Nobelprisen i 1922?',opts:['Kemi','Fysik','Litteratur','Økonomi'],ans:1,exp:'Niels Bohr 因原子結構與量子力學貢獻獲 1922 諾貝爾物理獎。',ch:'Kap. 6'},
+ {id:'R2-30',cat:'文化',q:'I forbindelse med hvilken historisk begivenhed blev Danmark ramt af influenzaepidemien kaldet "Den Spanske Syge"?',opts:['2. Slesvigske Krig (1864)','1. Verdenskrig (1914-1918)','2. Verdenskrig (1940-1945)','Den Kolde Krig'],ans:1,exp:'「西班牙流感」爆發於第一次世界大戰末期 (1918)。',ch:'Kap. 1.9'}
+];
+
+const CATS = ['歷史','政治','經濟','文化'];
+const CAT_LABEL = {'歷史':'歷史','政治':'政治制度','經濟':'經濟與福利','文化':'文化與社會'};
+const KEYS = ['A','B','C','D'];
+const WRONG_STORE = 'dk_wrong_ids';
+
+/* ============ 狀態 ============ */
+let pool=[], idx=0, score=0, answers=[], mode='', timerId=null, timeLeft=0;
+
+/* ============ 工具 ============ */
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
+function $(id){return document.getElementById(id);}
+function getWrong(){try{return JSON.parse(localStorage.getItem(WRONG_STORE))||[];}catch(e){return[];}}
+function setWrong(arr){localStorage.setItem(WRONG_STORE,JSON.stringify([...new Set(arr)]));}
+function show(id){['home','quiz','result'].forEach(s=>$(s).classList.add('hide'));$(id).classList.remove('hide');}
+
+/* ============ 首頁 ============ */
+function refreshHome(){
+  $('wrongCount').textContent = getWrong().length;
+}
+function showChapters(){
+  const box=$('chapterPick'); box.classList.toggle('hide');
+  const wrap=$('chapterChips'); wrap.innerHTML='';
+  CATS.forEach(c=>{
+    const n=QUESTIONS.filter(q=>q.cat===c).length;
+    const b=document.createElement('button');
+    b.className='chip'; b.textContent=CAT_LABEL[c]+' ('+n+')';
+    b.onclick=()=>startChapter(c);
+    wrap.appendChild(b);
+  });
+}
+
+/* ============ 啟動各模式 ============ */
+function startPractice(){ mode='practice'; pool=QUESTIONS.slice(); begin('練習模式 · 全 60 題'); }
+function startChapter(c){ mode='practice'; pool=shuffle(QUESTIONS.filter(q=>q.cat===c)); begin('章節：'+CAT_LABEL[c]); }
+function startExam(){
+  mode='exam';
+  pool=shuffle(QUESTIONS).slice(0,45);
+  timeLeft=45*60;
+  begin('模擬考 · 45 題');
+  timerId=setInterval(tick,1000); renderTimer();
+}
+function startWrong(){
+  const ids=getWrong();
+  if(!ids.length){ alert('目前沒有錯題！先去練習或模擬考累積一些吧。'); return; }
+  mode='practice';
+  pool=shuffle(QUESTIONS.filter(q=>ids.includes(q.id)));
+  begin('錯題複習 · '+pool.length+' 題');
+}
+function begin(label){
+  idx=0; score=0; answers=[];
+  $('quizMode').textContent=label;
+  if(mode!=='exam'){ $('timer').textContent=''; }
+  show('quiz'); renderQ();
+}
+
+/* ============ 計時器 ============ */
+function tick(){ timeLeft--; renderTimer(); if(timeLeft<=0){ clearInterval(timerId); finish(); } }
+function renderTimer(){
+  if(mode!=='exam'){return;}
+  const m=String(Math.floor(timeLeft/60)).padStart(2,'0');
+  const s=String(timeLeft%60).padStart(2,'0');
+  const t=$('timer'); t.textContent='⏱ '+m+':'+s;
+  t.classList.toggle('warn', timeLeft<=300);
+}
+
+/* ============ 出題 ============ */
+function renderQ(){
+  const q=pool[idx];
+  $('bar').style.width=((idx)/pool.length*100)+'%';
+  $('qcat').textContent=CAT_LABEL[q.cat]||q.cat;
+  $('qtext').innerHTML='<span class="num">'+(idx+1)+'/'+pool.length+'</span>'+escapeHtml(q.q);
+  const box=$('opts'); box.innerHTML='';
+  q.opts.forEach((opt,i)=>{
+    const b=document.createElement('button');
+    b.className='opt';
+    b.innerHTML='<span class="key">'+KEYS[i]+'</span><span>'+escapeHtml(opt)+'</span>';
+    b.onclick=()=>choose(i);
+    box.appendChild(b);
+  });
+  $('explain').className='explain';
+  $('explain').innerHTML='';
+  $('nextBtn').classList.add('hide');
+}
+function escapeHtml(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function choose(i){
+  const q=pool[idx];
+  const correct=(i===q.ans);
+  answers.push({id:q.id, picked:i, correct});
+  if(correct) score++;
+  // 錯題記錄
+  const w=getWrong();
+  if(correct){ setWrong(w.filter(x=>x!==q.id)); }
+  else if(!w.includes(q.id)){ setWrong([...w,q.id]); }
+  // 標示選項
+  const btns=$('opts').children;
+  for(let k=0;k<btns.length;k++){
+    btns[k].disabled=true;
+    if(k===q.ans) btns[k].classList.add('correct');
+    else if(k===i) btns[k].classList.add('wrong');
+  }
+  // 練習模式：立刻顯示解析；模擬考：只記分不顯示
+  if(mode!=='exam'){
+    const ex=$('explain');
+    ex.className='explain show '+(correct?'right':'wrong');
+    ex.innerHTML='<b>'+(correct?'✓ 答對了':'✗ 答錯了')+'　正解：'+KEYS[q.ans]+'</b>'
+      +escapeHtml(q.exp)+'<div class="ch">📖 對應章節：'+escapeHtml(q.ch)+'</div>';
+  }
+  $('bar').style.width=((idx+1)/pool.length*100)+'%';
+  $('nextBtn').textContent=(idx+1>=pool.length)?'看結果 →':'下一題 →';
+  $('nextBtn').classList.remove('hide');
+}
+function nextQ(){
+  idx++;
+  if(idx>=pool.length){ finish(); return; }
+  renderQ();
+}
+
+/* ============ 結束 / 結果 ============ */
+function quitQuiz(){
+  if(!confirm('確定要結束這次測驗嗎？')) return;
+  if(timerId){clearInterval(timerId);timerId=null;}
+  if(answers.length) finish(); else goHome();
+}
+function finish(){
+  if(timerId){clearInterval(timerId);timerId=null;}
+  const total=pool.length, done=answers.length;
+  const pct=done?Math.round(score/done*100):0;
+  $('resScore').textContent=score+' / '+total;
+  let vEl=$('resVerdict'), pass;
+  if(mode==='exam'){
+    pass=score>=36;
+    vEl.textContent=pass?'🎉 及格！（門檻 36/45）':'再加油！（門檻 36/45）';
+    vEl.className='verdict '+(pass?'pass':'fail');
+  }else{
+    pass=pct>=80;
+    vEl.textContent=pct>=90?'🎉 表現優異！':pct>=80?'👍 不錯，繼續保持':'多練幾次會更穩';
+    vEl.className='verdict '+(pass?'pass':'fail');
+  }
+  $('resStat').innerHTML=
+    '<div><span style="color:var(--ok)">'+score+'</span><small>答對</small></div>'+
+    '<div><span style="color:var(--bad)">'+(done-score)+'</span><small>答錯</small></div>'+
+    '<div><span>'+pct+'%</span><small>正確率</small></div>';
+  // 錯題回顧
+  const wrongs=answers.filter(a=>!a.correct);
+  let rev='';
+  if(wrongs.length){
+    rev='<h2 style="margin-top:18px">錯題回顧（'+wrongs.length+'）</h2>';
+    wrongs.forEach(a=>{
+      const q=QUESTIONS.find(x=>x.id===a.id);
+      rev+='<div class="review-item"><div class="q">'+escapeHtml(q.q)+'</div>'
+        +'<div>你選：'+KEYS[a.picked]+'　<span class="a">正解：'+KEYS[q.ans]+' — '+escapeHtml(q.opts[q.ans])+'</span></div>'
+        +'<div style="color:var(--muted);font-size:.84rem;margin-top:3px">'+escapeHtml(q.exp)+'</div></div>';
+    });
+  }else if(done){
+    rev='<p style="margin-top:16px;color:var(--ok);font-weight:600">全部答對，太厲害了！👏</p>';
+  }
+  $('resReview').innerHTML=rev;
+  $('resRetry').onclick=()=>{
+    if(mode==='exam') startExam();
+    else { pool=shuffle(pool); begin($('quizMode').textContent); }
+  };
+  show('result');
+}
+function goHome(){
+  if(timerId){clearInterval(timerId);timerId=null;}
+  refreshHome();
+  $('chapterPick').classList.add('hide');
+  show('home');
+}
+
+refreshHome();
+</script>
+</body>
+</html>
